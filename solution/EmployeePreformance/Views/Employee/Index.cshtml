@@ -159,7 +159,7 @@
 
             self.create = function () {
                 //Sense Check - are all fields complete?
-                if (Employee.FirstName() != "" && Employee.LastName() != "" && Employee.Department() != "" && Employee.JobTitle() != "" && Employee.NINumber() != "" && Employee.Country() != "") {
+                if (Employee.FirstName() != "" && Employee.LastName() != "" && Employee.Department() != "" && Employee.JobTitle() != "" && Employee.NINumber() != "") {
                     $.ajax({
                         //Call Create Employee Method
                         url: '@Url.Action("CreateEmployee", "Employee")',
