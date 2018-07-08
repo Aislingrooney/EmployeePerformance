@@ -1,0 +1,251 @@
+﻿<h3>
+    Employees List
+</h3>
+<table id="empl" data-bind="visible: Employees().length > 0" class="table">
+    <thead>
+        <tr>
+            <th>
+                Employee ID
+            </th>
+            <th>
+                First Name
+            </th>
+            <th>
+                Last Name
+            </th>
+            <th>
+                Department
+            </th>
+            <th>
+                JobTitle
+            </th>
+            <th>
+                Postal Code
+            </th>
+        </tr>
+    </thead>
+    <tbody data-bind="foreach: Employees">
+        <tr>
+            <td data-bind="text: EmployeeID"></td>
+            <td data-bind="text: FirstName"></td>
+            <td data-bind="text: LastName"></td>
+            <td data-bind="text: Department"></td>
+            <td data-bind="text: JobTitle"></td>
+            <td data-bind="text: NINumber"></td>
+            <td>
+                <button data-bind="click: $root.edit">
+                    Edit
+                </button>
+                <button data-bind="click: $root.delete">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<br />
+
+<div style="border-top: solid 2px  #282828; width: 430px; height: 10px">&nbsp;</div>
+
+<div data-bind="if: Employee">
+    <div>
+        <h2>Update Employee</h2>
+    </div>
+    <div>
+        <label for="EmployeeID" data-bind="visible: false">Employee ID</label>
+        <label data-bind="text: Employee().EmployeeID, visible: false"></label>
+    </div>
+    <div>
+        <label for="firstname">First Name</label>
+        <input data-bind="value: Employee().FirstName" type="text" title="First Name" />
+    </div>
+    <div>
+        <label for="lastname">Last Name</label>
+        <input data-bind="value: Employee().LastName" type="text" title="Last Name" />
+    </div>
+    <div>
+        <label for="Department">Department</label>
+        <input data-bind="value: Employee().Department" type="text" title="Department" />
+    </div>
+    <div>
+        <label for="JobTitle">JobTitle</label>
+        <input data-bind="value: Employee().JobTitle" type="text" title="Price" />
+    </div>
+    <div>
+        <label for="NINumber">Postal Code</label>
+        <input data-bind="value: Employee().NINumber" type="text" title="NINumber" />
+    </div>
+    <br />
+    <div>
+        <button data-bind="click: $root.update">Update</button>
+        <button data-bind="click: $root.cancel">Cancel</button>
+    </div>
+</div>
+
+
+<div data-bind="ifnot: Employee()">
+    <div>
+        <h2>Add New Employee</h2>
+    </div>
+    <div>
+        <label for="firstname">First Name</label>
+        <input data-bind="value: $root.FirstName" type="text" title="FirstName" />
+    </div>
+    <div>
+        <label for="lastname">Last Name</label>
+        <input data-bind="value: $root.LastName" type="text" title="LastName" />
+    </div>
+    <div>
+        <label for="Department">Department</label>
+        <input data-bind="value: $root.Department" type="text" title="Department" />
+    </div>
+    <div>
+        <label for="JobTitle">Job Title</label>
+        <input data-bind="value: $root.JobTitle" type="text" title="JobTitle" />
+    </div>
+    <div>
+        <label for="NINumber">National Insurance Number</label>
+        <input data-bind="value: $root.NINumber" type="text" title="NINumber" />
+    </div>
+    <br />
+    <div>
+        <button data-bind="click: $root.create">Save</button>
+        <button data-bind="click: $root.reset">Reset</button>
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/knockout-2.2.0.js"></script>
+    <script type="text/javascript">
+        function EmployeeViewModel() {
+            var self = this;
+            //Set up observables for each property within the Employee Model
+            self.EmployeeID = ko.observable("");
+            self.FirstName = ko.observable("");
+            self.LastName = ko.observable("");
+            self.Department = ko.observable("");
+            self.JobTitle = ko.observable("");
+            self.NINumber = ko.observable("");
+
+            //Declare an employee object
+            var Employee = {
+                EmployeeID: self.EmployeeID,
+                FirstName: self.FirstName,
+                LastName: self.LastName,
+                Department: self.Department,
+                JobTitle: self.JobTitle,
+                NINumber: self.NINumber
+            };
+
+            //Make Employee an observable so that we can do things to it
+            self.Employee = ko.observable();
+            //Set up a list of employees
+            self.Employees = ko.observableArray();
+
+            //Use some AJAX to call the GetAllEmployees method
+            $.ajax({
+                url: '@Url.Action("GetAllEmployees", "Employee")',
+                cache: false,
+                type: 'GET',
+                contentType: 'application/json; charset=utf-8',
+                data: {},
+                //If sucessful add returned JSON result to the Employees list
+                success: function (data) {
+                    self.Employees(data);
+                }
+            });
+
+
+            self.create = function () {
+                //Sense Check - are all fields complete?
+                if (Employee.FirstName() != "" && Employee.LastName() != "" && Employee.Department() != "" && Employee.JobTitle() != "" && Employee.NINumber() != "" && Employee.Country() != "") {
+                    $.ajax({
+                        //Call Create Employee Method
+                        url: '@Url.Action("CreateEmployee", "Employee")',
+                        cache: false,
+                        type: 'POST',
+                        contentType: 'application/json; charset=utf-8',
+                        data: ko.toJSON(Employee),
+                        //if sucessful, add data to employees list
+                        success: function (data) {
+                            self.Employees.push(data);
+                            self.FirstName("");
+                            self.LastName("");
+                            self.Department("");
+                            self.JobTitle("");
+                            self.NINumber("");
+                        }
+                        //if fail, show an alert box with the error
+                    }).fail(
+                        function (xhr, textStatus, err) {
+                            alert(err);
+                        });
+                } else {
+                    //if all fields arent comlpete, display alert box asking users to do so
+                    alert('All values must be complete to proceed.');
+                }
+            }
+
+            // Delete employee
+            self.delete = function (Employee) {
+                if (confirm('Are you sure to Delete "' + Employee.FirstName + '" employee ??')) {
+                    var id = Employee.EmployeeID;
+                    $.ajax({
+                        //call delete employee method
+                        url: '@Url.Action("DeleteEmployee", "Employee")',
+                        cache: false,
+                        type: 'POST',
+                        contentType: 'application/json; charset=utf-8',
+                        data: ko.toJSON(id),
+                        success: function (data) {
+                            //if sucessful, delete employee and show user an alert informating of sucess
+                            self.Employees.remove(Employee);
+                              alert("Record Deleted Successfully");
+                        }
+                    }).fail(
+                        //otherwise show alert with error message
+                        function (xhr, textStatus, err) {
+                            alert(err);
+                        });
+                }
+            }
+
+            // Edit employee
+            self.edit = function (Employee) {
+                self.Employee(Employee);
+            }
+            // Update employee
+            self.update = function () {
+                var Employee = self.Employee();
+                alert(Employee.EmployeeID);
+                debugger;
+                $.ajax({
+                    //Call edit employee controller method
+                    url: '@Url.Action("EditEmployee", "Employee")',
+                    cache: false,
+                    type: 'PUT',
+                    contentType: 'application/json; charset=utf-8',
+                    data: ko.toJSON(Employee),
+                    success: function (data) {
+                        //update the employee list with all the data - including updated employee
+                        alert(data);
+                        self.Employees.removeAll();
+                        self.Employees(data); //Put the response in ObservableArray
+                        self.Employee(null);
+                        alert("Record Updated Successfully");
+                    }
+                })
+                    //if falure, show alert with error message
+                    .fail(
+                    function (xhr, textStatus, err) {
+                        alert(err);
+                    });
+            }
+        }
+
+        //set up view model and apply bindings.
+        var viewModel = new EmployeeViewModel();
+        ko.applyBindings(viewModel);
+    </script>
+}
